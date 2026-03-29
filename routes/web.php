@@ -1,34 +1,48 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\RiwayatController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\KepalaAuthController;
+use App\Http\Controllers\KepalaMadrasahController;
 
-Route::get('/', [PembayaranController::class, 'dashboard'])->name('dashboard');
+Route::get('/', function () {
+    return view('auth.landing');
+})->name('landing');
 
-Route::resource('pembayaran', PembayaranController::class)->except(['show']);
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->name('login');
 
+Route::post('/login', [LoginController::class, 'login']);
 
-// (opsional) CRUD Transaksi jika kamu pakai juga
-Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
-Route::get('/transaksi/tambah', [TransaksiController::class, 'create'])->name('transaksi.create');
-Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
-Route::delete('/transaksi/{id}', [TransaksiController::class, 'destroy'])->name('transaksi.destroy');
+Route::delete('/logout', [LoginController::class, 'logout'])
+    ->name('logout');
 
-// Dashboard
-Route::get('/', [PembayaranController::class, 'dashboard'])->name('dashboard');
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/dashboard', [PembayaranController::class, 'dashboard'])
+        ->name('dashboard');
+});
 
-// CRUD Pembayaran
-Route::resource('pembayaran', PembayaranController::class);
+Route::middleware(['auth','role:admin'])->group(function () {
+    Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
+    Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
 
-// CRUD Transaksi (index, create, store, edit, update, destroy)
-Route::resource('transaksi', TransaksiController::class)
-    ->names('transaksi'); // transaksi.index, transaksi.destroy, dst
+    Route::resource('siswa', SiswaController::class);
 
-Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
+    Route::get('/dashboard', [PembayaranController::class, 'dashboard'])->name('dashboard');
+    Route::resource('pembayaran', PembayaranController::class)->except(['show']);
+    Route::resource('transaksi', TransaksiController::class);
+    Route::get('/riwayat', [RiwayatController::class, 'index'])
+    ->name('riwayat.index');
+});
 
-Route::get('/riwayat',                [RiwayatController::class,'index'])->name('riwayat.index');
-Route::get('/riwayat/print',          [RiwayatController::class,'print'])->name('riwayat.print');
-Route::get('/riwayat/export/excel',   [RiwayatController::class,'exportExcel'])->name('riwayat.export.excel');
-Route::get('/riwayat/export/pdf',     [RiwayatController::class,'exportPdf'])->name('riwayat.export.pdf');
+Route::middleware(['auth','role:kepala'])->group(function () {
+    Route::get('/kepala/dashboard', [KepalaMadrasahController::class,'index'])->name('kepala.dashboard');
+});
+Route::get('/kepala/login', [KepalaAuthController::class, 'showLoginForm'])
+    ->name('kepala.login');
+
+Route::post('/kepala/login', [KepalaAuthController::class, 'login']);

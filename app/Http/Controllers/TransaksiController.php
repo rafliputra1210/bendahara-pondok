@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class TransaksiController extends Controller
 {
-    // LIST: hanya pengeluaran
+    // LIST: tampilkan hanya pengeluaran
     public function index()
     {
         $items = Transaksi::where('jenis', 'pengeluaran')
@@ -32,7 +32,7 @@ class TransaksiController extends Controller
             'tanggal'    => ['required','date'],
         ]);
 
-        $data['jenis'] = 'pengeluaran'; // paksa pengeluaran
+        // tidak perlu set 'jenis', model akan otomatis isi 'pengeluaran'
 
         Transaksi::create($data);
 
@@ -55,21 +55,17 @@ class TransaksiController extends Controller
             'tanggal'    => ['required','date'],
         ]);
 
-        $data['jenis'] = 'pengeluaran'; // tetap pengeluaran
-
+        // tidak perlu set 'jenis', model tetap memaksanya menjadi pengeluaran
         $transaksi->update($data);
 
         return redirect()->route('transaksi.index')
             ->with('success', 'Pengeluaran berhasil diubah.');
     }
 
-    // HAPUS (jaga-jaga kalau ada data lama bukan pengeluaran)
+    // HAPUS
     public function destroy(Transaksi $transaksi)
     {
-        if ($transaksi->jenis !== 'pengeluaran') {
-            return back()->with('error', 'Yang boleh dihapus hanya pengeluaran.');
-        }
-
+        // Karena semua data adalah pengeluaran, cukup hapus langsung
         $transaksi->delete();
 
         return back()->with('success', 'Pengeluaran berhasil dihapus.');
